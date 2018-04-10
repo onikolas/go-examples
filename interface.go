@@ -46,7 +46,7 @@ func main() {
 	storage.Store("Another string")
 	fmt.Println(storage.Retrieve(0))
 	// ...what did we gain over declaring storage as:
-	// var storage FancyList{}
+	// var storage FancySlice{}
 
 	// stringer doing work
 	fmt.Println(storage)

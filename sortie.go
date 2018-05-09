@@ -14,6 +14,30 @@
 
 package main
 
+import (
+	"encoding/csv"
+	"fmt"
+	"log"
+)
+
 func main() {
 
+	var data [][]string = [][]string{{"1", "2", "3", "48", "5"}, {"1", "3", "3", "4", "4"}, {"1", "1", "1", "1", "1"}}
+	x := ConvertToSlice(data)
+	fmt.Println(x)
+}
+
+func ConvertToSlice(inputData [][]string) []int {
+	var destination []int
+	for i := range inputFile {
+		for j := range inputFile[i] {
+			v := inputFile[i][j]
+			w, err := strconv.Atoi(v)
+			if err != nil {
+				log.Printf("Input %v , %v from the input file not an integer", i, j)
+			}
+			destination = append(destination, w)
+		}
+	}
+	return destination
 }

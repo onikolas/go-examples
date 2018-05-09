@@ -72,6 +72,15 @@ func main() {
 	}
 	fmt.Println("Composite struct 3:", c4)
 
+	// Declare and initialize (this is a non-reusable struct)
+	onceoff := struct {
+		a, b int
+		c    coord
+	}{
+		7, 8, coord{7, 8},
+	}
+	fmt.Println("One-off struct:", onceoff)
+
 	// Map literals
 	mmm := map[int]string{
 		1: "ena",

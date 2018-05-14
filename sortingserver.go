@@ -28,18 +28,41 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 func main() {
-	datastore, _ := ReadFile("sortingexample.csv")
-	cleanData := ConvertToSlice(datastore)
-	sortedArray := CountSort(cleanData)
-	fmt.Println(datastore)
-	fmt.Println(cleanData)
-	fmt.Println(sortedArray)
+	go FileSorter("sortingexample.csv")
+	time.Sleep(time.Second*2)
 }
 
-//ReadFile takes a file as input and writes the content of the file as a 2-d array of strings
+func FileSorter(f string) []int {
+	datastore, _ := ReadFile(f)
+	cleanData := DataCleaner(ConvertToSlice(datastore))
+	sortedArray := CountSort(cleanData)
+	fmt.Println(sortedArray)
+	return sortedArray
+}
+
+func ContinuousSorter(f string) []int {
+
+}
+
+// DataCleaner takes a string slice as input, converts all constituent strings to integers and returns an integer slice
+func DataCleaner(inputData []string) []int {
+	var destination []int
+	for i := range inputData {
+			v := inputData[i]
+			w, err := strconv.Atoi(v)
+			if err != nil {
+				log.Printf("Input %v from the input file is not an integer", i)
+			}
+			destination = append(destination, w)
+	}
+	return destination
+}
+
+// ReadFile takes a file as input and writes the content of the file as a 2-d array of strings
 func ReadFile(f string) ([][]string, error) {
 	openFile, err := os.Open(f)
 	if err != nil {
@@ -59,16 +82,12 @@ func ReadFile(f string) ([][]string, error) {
 
 // TODO Right now, the ConvertToSlice function fails if there are spaces between values in the csv, or there are commas at the end of the line. Make the implementation tolerate these faults
 
-func ConvertToSlice(inputData [][]string) []int {
-	var destination []int
+func ConvertToSlice(inputData [][]string) []string {
+	var destination []string
 	for i := range inputData {
 		for j := range inputData[i] {
 			v := inputData[i][j]
-			w, err := strconv.Atoi(v)
-			if err != nil {
-				log.Printf("Input %v , %v from the input file is not an integer", i, j)
-			}
-			destination = append(destination, w)
+			destination = append(destination, v)
 		}
 	}
 	return destination
@@ -103,5 +122,3 @@ func CountSort(input []int) []int {
 
   return sorted
 }
-
-

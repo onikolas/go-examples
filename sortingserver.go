@@ -33,8 +33,10 @@ import (
 func main() {
 	datastore, _ := ReadFile("sortingexample.csv")
 	cleanData := ConvertToSlice(datastore)
+	sortedArray := CountSort(cleanData)
 	fmt.Println(datastore)
 	fmt.Println(cleanData)
+	fmt.Println(sortedArray)
 }
 
 //ReadFile takes a file as input and writes the content of the file as a 2-d array of strings
@@ -72,8 +74,7 @@ func ConvertToSlice(inputData [][]string) []int {
 	return destination
 }
 
-/*
-// CounSort sorts an integer slice (https://en.wikipedia.org/wiki/Counting_sort)
+// CountSort sorts an integer slice (https://en.wikipedia.org/wiki/Counting_sort)
 func CountSort(input []int) []int {
   sorted := make([]int, len(input))
   size := input[0]
@@ -103,9 +104,4 @@ func CountSort(input []int) []int {
   return sorted
 }
 
-func main() {
-  results := CountSort(data)
-  fmt.PrintLn(results)
-}
 
-*/

@@ -12,7 +12,6 @@
 //
 // The request to display/save the sorted data can be a key press, a net package or both
 
-
 /* var data = []int{8, 9, 122, 1, 1, 100, 999, 1001, 0} */
 
 /* [ [1,2,3,4,5],
@@ -20,16 +19,15 @@
    [1,1,1,1,1] ]
 */
 
-
 package main
 
 import (
-"encoding/csv"
-"fmt"
-"log"
-"os"
-"strconv"
-"errors"
+	"encoding/csv"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
 )
 
 func main() {
@@ -56,7 +54,6 @@ func ReadFile(f string) ([][]string, error) {
 
 	return data, nil
 }
-
 
 // TODO Right now, the ConvertToSlice function fails if there are spaces between values in the csv, or there are commas at the end of the line. Make the implementation tolerate these faults
 

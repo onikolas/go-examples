@@ -20,11 +20,7 @@
 /*
 Road map:
 ========
-1. Define a CountSort data type. It should be safe for concurrent access. Only sorts ints.
-2. Add methods to CountSort:
-   Initialize() : sets array length
-   Add() : adds a number to the data
-   Sort() : sorts and returns a sorted array
+
 3. Spawn a goroutine that periodically Add()s data to CountSort (this simulates the network)
 4. Spawn a goroutine that listens for a specific keypress (e.g letter 'p') after which it sorts
    and prints the data
@@ -37,6 +33,7 @@ Road map:
 package main
 
 import (
+	/*
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -44,12 +41,54 @@ import (
 	"os"
 	"strconv"
 	"time"
+	*/
+	"sync"
+	"fmt"
 )
 
-func main() {
-	go FileSorter("sortingexample.csv")
-	time.Sleep(time.Second * 2)
+// stores data to be sorted with a mutex for concurrent go-routine access
+type DataSort struct{
+	rawData []int
+	locker sync.RWMutex
 }
+
+func NewDataSort(largest int) DataSort {
+	var holder DataSort
+	holder.rawData = make([]int, largest )
+	return holder
+}
+
+
+func (ds *DataSort) Add(a ...int) {
+	ds.locker.Lock()
+	for _, num := range a {
+		ds.rawData[num]++
+	}
+	ds.locker.Unlock()
+}
+
+func (ds *DataSort) Sort() []int {
+	ds.locker.RLock()
+	counter := len(ds.rawData)
+	var results []int
+	for i := 0; i < counter; i++ {
+		NumDuplications := ds.rawData[i]
+		for j := 0; j < NumDuplications; j++ {
+			results = append(results, i)
+		}
+	}
+	ds.locker.RUnlock()
+	return results
+}
+
+func main() {
+	OpStruct := NewDataSort(100)
+	OpStruct.Add(21,53,64,53,4,34,6,8,10)
+	result := OpStruct.Sort()
+	fmt.Println(result)
+}
+
+/*
 
 func FileSorter(f string) []int {
 	datastore, _ := ReadFile(f)
@@ -137,3 +176,5 @@ func CountSort(input []int) []int {
 
 	return sorted
 }
+
+*/

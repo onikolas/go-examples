@@ -21,10 +21,6 @@
 Road map:
 ========
 
-3. Spawn a goroutine that periodically Add()s data to CountSort (this simulates the network)
-4. Spawn a goroutine that listens for a specific keypress (e.g letter 'p') after which it sorts
-   and prints the data
-5. Spawn multiple Add()ers that push data concurrently
 6. Can we optimize? Are there operations that can be done in parallel?
 7. Generalize (interface) so that we can sort other data.
 8. Replace step 3 with network
@@ -35,7 +31,7 @@ package main
 import (
 	/*
 	"encoding/csv"
-	"errors"
+
 	"fmt"
 	"log"
 	"os"
@@ -44,6 +40,10 @@ import (
 	*/
 	"sync"
 	"fmt"
+	"time"
+	"math/rand"
+	"bufio"
+	"os"
 )
 
 // stores data to be sorted with a mutex for concurrent go-routine access
@@ -54,10 +54,9 @@ type DataSort struct{
 
 func NewDataSort(largest int) DataSort {
 	var holder DataSort
-	holder.rawData = make([]int, largest )
+	holder.rawData = make([]int, largest)
 	return holder
 }
-
 
 func (ds *DataSort) Add(a ...int) {
 	ds.locker.Lock()
@@ -81,11 +80,75 @@ func (ds *DataSort) Sort() []int {
 	return results
 }
 
+func NetworkSimulator(data *DataSort, quantity int) {
+	// k represents the largest integer
+	k := len(data.rawData)
+	fmt.Println(k)
+	for i := 0; i < quantity; i++ {
+		j := rand.Intn(k)
+		data.Add(j)
+		time.Sleep(100*time.Millisecond)
+	}
+}
+
+func ContinuousSorter(data *DataSort) {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Println("entercommand")
+		input, _ := reader.ReadString('\n')
+		fmt.Println(input)
+		if input == "print\n" {
+			sortedArray := data.Sort()
+			fmt.Println(sortedArray)
+		}
+	}
+}
+
+type ArrayDataSort struct {
+	segments []DataSort
+}
+
+//
+func NewArrayDataSort(segmentSize int, numberSegment int) ArrayDataSort {
+	var holder ArrayDataSort
+	holder.segments = make([]DataSort, numberSegment)
+	for i := 0; i <numberSegment; i++ {
+		holder.segments[i] = NewDataSort(segmentSize)
+	}
+	return holder
+}
+
+func (ds *ArrayDataSort) Add(a ...int) {
+	numberSegment := len(ds.segments)
+	segmentLength := len(ds.segments[0].rawData)
+	for _, num := range a {
+		quotient := num / segmentLength
+		remainder := num % segmentLength
+		if quotient > numberSegment || num < 0 {
+			fmt.Printf("Your supplied number is out of the range of numbers program can handle. It can between 0 and %v", numberSegment*segmentLength)
+		} else {
+			ds.segments[quotient].Add(remainder)}
+	}
+}
+/*
+func (ds *ArrayDataSort) Sort() []int {
+
+}
+*/
 func main() {
+	MasterData := NewArrayDataSort(5, 5)
+	MasterData.Add(2,5,6,20,23,24,4,0,-3)
+	fmt.Println(MasterData)
+	/*
 	OpStruct := NewDataSort(100)
 	OpStruct.Add(21,53,64,53,4,34,6,8,10)
 	result := OpStruct.Sort()
 	fmt.Println(result)
+	go NetworkSimulator(&OpStruct, 20)
+	go NetworkSimulator(&OpStruct, 10)
+	go ContinuousSorter(&OpStruct)
+	time.Sleep(20*time.Second)
+	*/
 }
 
 /*

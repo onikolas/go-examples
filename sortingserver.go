@@ -21,7 +21,6 @@
 Road map:
 ========
 
-6. Can we optimize? Are there operations that can be done in parallel?
 7. Generalize (interface) so that we can sort other data.
 8. Replace step 3 with network
 */
@@ -130,15 +129,24 @@ func (ds *ArrayDataSort) Add(a ...int) {
 			ds.segments[quotient].Add(remainder)}
 	}
 }
-/*
-func (ds *ArrayDataSort) Sort() []int {
 
+func (ds *ArrayDataSort) Sort() []int {
+	segmentLength := len(ds.segments[0].rawData)
+	var results []int
+	for i := 0; i < len(ds.segments); i++ {
+		storer := ds.segments[i].Sort()
+		for _,num := range storer {
+			results = append(results, i * segmentLength + num)
+		}
+	}
+	return results
 }
-*/
+
 func main() {
 	MasterData := NewArrayDataSort(5, 5)
-	MasterData.Add(2,5,6,20,23,24,4,0,-3)
-	fmt.Println(MasterData)
+	MasterData.Add(2,5,6,20,23,24,4,0,10)
+	fmt.Println(MasterData.Sort())
+
 	/*
 	OpStruct := NewDataSort(100)
 	OpStruct.Add(21,53,64,53,4,34,6,8,10)

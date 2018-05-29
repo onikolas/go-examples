@@ -45,18 +45,26 @@ import (
 	"os"
 )
 
-// stores data to be sorted with a mutex for concurrent go-routine access
+// This interface describes all the data types that can be sorted with this program. All sortable data types can be assigned an index for sorting.
+type Sorter interface {
+	indexOf() uint
+
+}
+
+// Stores data to be sorted with a mutex for concurrent go-routine access
 type DataSort struct{
 	rawData []int
 	locker sync.RWMutex
 }
 
+// Initialises a DataSort structure with the requisite length. largest represents the largest element we can get.
 func NewDataSort(largest int) DataSort {
 	var holder DataSort
 	holder.rawData = make([]int, largest)
 	return holder
 }
 
+//
 func (ds *DataSort) Add(a ...int) {
 	ds.locker.Lock()
 	for _, num := range a {
@@ -79,6 +87,7 @@ func (ds *DataSort) Sort() []int {
 	return results
 }
 
+// Prints a number 'quantity' of random integers
 func NetworkSimulator(data *DataSort, quantity int) {
 	// k represents the largest integer
 	k := len(data.rawData)
@@ -103,11 +112,20 @@ func ContinuousSorter(data *DataSort) {
 	}
 }
 
+//Stores data as an array of DataSort struct in order to enable concurrency
 type ArrayDataSort struct {
 	segments []DataSort
 }
 
-//
+func(ads *ArrayDataSort) AddSegment(numSegment int, segmentSize int) {
+	holder := make([]DataSort, numSegment)
+	for i := range holder {
+		holder[i] = NewDataSort(segmentSize)
+	}
+	ads.segments = append(ads.segments, holder...)
+}
+
+// Initializer of ArrayDataSort
 func NewArrayDataSort(segmentSize int, numberSegment int) ArrayDataSort {
 	var holder ArrayDataSort
 	holder.segments = make([]DataSort, numberSegment)
@@ -117,16 +135,22 @@ func NewArrayDataSort(segmentSize int, numberSegment int) ArrayDataSort {
 	return holder
 }
 
+
 func (ds *ArrayDataSort) Add(a ...int) {
 	numberSegment := len(ds.segments)
 	segmentLength := len(ds.segments[0].rawData)
 	for _, num := range a {
 		quotient := num / segmentLength
 		remainder := num % segmentLength
-		if quotient > numberSegment || num < 0 {
+		if num < 0 {
 			fmt.Printf("Your supplied number is out of the range of numbers program can handle. It can between 0 and %v", numberSegment*segmentLength)
-		} else {
-			ds.segments[quotient].Add(remainder)}
+			continue
+		}
+		if quotient >= numberSegment {
+			ds.AddSegment(quotient - numberSegment + 1, segmentLength)
+			numberSegment = len(ds.segments)
+		}
+		ds.segments[quotient].Add(remainder)
 	}
 }
 
@@ -144,7 +168,7 @@ func (ds *ArrayDataSort) Sort() []int {
 
 func main() {
 	MasterData := NewArrayDataSort(5, 5)
-	MasterData.Add(2,5,6,20,23,24,4,0,10)
+	MasterData.Add(2,5,6,20,23,24,4,0,10,25, 26, 30, 40, 63)
 	fmt.Println(MasterData.Sort())
 
 	/*

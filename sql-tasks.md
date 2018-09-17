@@ -5,7 +5,7 @@
 2. Create a database (createdb DatabaseName) and connect to it.
 
 3. Create our first table. 
-   ```
+   ```sql
    create table pizza (
    id serial primary key,
    name varchar(50) not null, 
@@ -16,7 +16,7 @@
    ```
 
 4. Add data to our table (second statement causes error).
-   ```
+   ```sql
    insert into pizza (id, name, ingredients, price, size, comments) values 
    (1, 'pepperoni', 'cheese, peperoni', 10, 'S', '') ; 
    insert into pizza (id, name, ingredients, price, size, comments) values 
@@ -24,7 +24,7 @@
    ```
 
 5. Add more.
-   ```
+   ```sql
    insert into pizza (id, name, ingredients, price, size, comments) values 
    (2, 'pepperoni', 'cheese, peperoni', 15, 'L', '') , 
    (3, 'margherita', 'cheese, peperoni', 10, 'S', '') , 

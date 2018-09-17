@@ -75,20 +75,30 @@
 	```
 
 12. Delete duplicate pizzas. This will violate a constraint.
-	```	delete from pizza where id in (2,4) ;```
+	```sql
+	delete from pizza where id in (2,4) ;
+	```
 	
 13. Update foreign keys and then delete.
-	``` update prices set pizza = 3 where pizza = 2; ```
+	```sql 
+	update prices set pizza = 3 where pizza = 2; 
+	```
 
 14. Get the complete picture.
 	Cartesian product (usually not what we want):	
-	``` select * from pizza, prices ; ```
+	```sql
+	select * from pizza, prices ; 
+	```
 	
 	Filter with a where clause:
-	```  select * from pizza, prices where pizza.id = prices.pizza ```
+	```sql
+	select * from pizza, prices where pizza.id = prices.pizza 
+	```
 	
 	Or with a join clause (faster, usually):
-	```select * from pizza join prices on (pizza.id = prices.pizza) ```
+	```sql
+	select * from pizza join prices on (pizza.id = prices.pizza) 
+	```
 	
 15. Practice:
 	- Make a menu. Query to get  the name, ingredients, size and price of each pizza.

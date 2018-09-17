@@ -10,21 +10,6 @@
 //
 // The request to display/save the sorted data can be a key press, a net package or both
 
-/* var data = []int{8, 9, 122, 1, 1, 100, 999, 1001, 0} */
-
-/* [ [1,2,3,4,5],
-   [1,3,3,4,4],
-   [1,1,1,1,1] ]
-*/
-
-/*
-Road map:
-========
-
-7. Generalize (interface) so that we can sort other data.
-8. Replace step 3 with network
-*/
-
 package main
 
 import (
@@ -34,7 +19,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
+
 	"time"
 	*/
 	"sync"
@@ -43,20 +28,42 @@ import (
 	"math/rand"
 	"bufio"
 	"os"
+	"net"
+	"strconv"
+	"strings"
 )
 
-// stores data to be sorted with a mutex for concurrent go-routine access
+// This interface describes all the data types that can be sorted with this program. All sortable data types can be assigned an index for sorting.
+type Sorter interface {
+	indexOf() int
+}
+
+type sortablestring string
+
+func(ss sortablestring) indexOf() int {
+	return int(ss[0])
+}
+
+type sortableinteger int
+
+func(si sortableinteger) indexOf() int {
+	return int(si)
+}
+
+// Stores data to be sorted with a mutex for concurrent go-routine access
 type DataSort struct{
 	rawData []int
 	locker sync.RWMutex
 }
 
+// Initialises a DataSort structure with the requisite length. largest represents the largest element we can get.
 func NewDataSort(largest int) DataSort {
 	var holder DataSort
 	holder.rawData = make([]int, largest)
 	return holder
 }
 
+//
 func (ds *DataSort) Add(a ...int) {
 	ds.locker.Lock()
 	for _, num := range a {
@@ -79,6 +86,7 @@ func (ds *DataSort) Sort() []int {
 	return results
 }
 
+// Prints a number 'quantity' of random integers
 func NetworkSimulator(data *DataSort, quantity int) {
 	// k represents the largest integer
 	k := len(data.rawData)
@@ -103,11 +111,20 @@ func ContinuousSorter(data *DataSort) {
 	}
 }
 
+//Stores data as an array of DataSort struct in order to enable concurrency
 type ArrayDataSort struct {
 	segments []DataSort
 }
 
-//
+func(ads *ArrayDataSort) AddSegment(numSegment int, segmentSize int) {
+	holder := make([]DataSort, numSegment)
+	for i := range holder {
+		holder[i] = NewDataSort(segmentSize)
+	}
+	ads.segments = append(ads.segments, holder...)
+}
+
+// Initializer of ArrayDataSort
 func NewArrayDataSort(segmentSize int, numberSegment int) ArrayDataSort {
 	var holder ArrayDataSort
 	holder.segments = make([]DataSort, numberSegment)
@@ -117,16 +134,22 @@ func NewArrayDataSort(segmentSize int, numberSegment int) ArrayDataSort {
 	return holder
 }
 
-func (ds *ArrayDataSort) Add(a ...int) {
+
+func (ds *ArrayDataSort) Add(a ...Sorter) {
 	numberSegment := len(ds.segments)
 	segmentLength := len(ds.segments[0].rawData)
 	for _, num := range a {
-		quotient := num / segmentLength
-		remainder := num % segmentLength
-		if quotient > numberSegment || num < 0 {
+		quotient := num.indexOf() / segmentLength
+		remainder := num.indexOf() % segmentLength
+		if num.indexOf() < 0 {
 			fmt.Printf("Your supplied number is out of the range of numbers program can handle. It can between 0 and %v", numberSegment*segmentLength)
-		} else {
-			ds.segments[quotient].Add(remainder)}
+			continue
+		}
+		if quotient >= numberSegment {
+			ds.AddSegment(quotient - numberSegment + 1, segmentLength)
+			numberSegment = len(ds.segments)
+		}
+		ds.segments[quotient].Add(remainder)
 	}
 }
 
@@ -142,21 +165,47 @@ func (ds *ArrayDataSort) Sort() []int {
 	return results
 }
 
-func main() {
-	MasterData := NewArrayDataSort(5, 5)
-	MasterData.Add(2,5,6,20,23,24,4,0,10)
-	fmt.Println(MasterData.Sort())
+func handleConnection(conn net.Conn, Data *ArrayDataSort) {
 
-	/*
-	OpStruct := NewDataSort(100)
-	OpStruct.Add(21,53,64,53,4,34,6,8,10)
-	result := OpStruct.Sort()
-	fmt.Println(result)
-	go NetworkSimulator(&OpStruct, 20)
-	go NetworkSimulator(&OpStruct, 10)
-	go ContinuousSorter(&OpStruct)
-	time.Sleep(20*time.Second)
-	*/
+	reader := bufio.NewReader(conn)
+
+	for {
+		// TODO add read deadline
+		str, err := reader.ReadString(' ')
+		if err != nil {
+			fmt.Println(conn.LocalAddr().String(), " has ", err)
+			conn.Close()
+			fmt.Println(Data.Sort())
+			return
+		} else {
+			intbuffer, error := strconv.Atoi(strings.TrimSpace(str))
+			intbuffer1 := sortableinteger(intbuffer)
+			if error != nil {
+				fmt.Printf("Received data could not be converted to integer. Received (%v)", str)
+			}
+			Data.Add(intbuffer1)
+		}
+	}
+
+}
+
+func main() {
+	MasterData := NewArrayDataSort(5,5)
+	ln, err := net.Listen("tcp", ":34567")
+	if err != nil {
+		panic(err)
+	}
+	for {
+		conn, err := ln.Accept()
+		fmt.Println(MasterData.Sort())
+		if err != nil {
+			// handle error
+		}
+		fmt.Println(conn.LocalAddr().String(), " has connected")
+		go handleConnection(conn, &MasterData)
+	}
+
+
 }
 
 /*
